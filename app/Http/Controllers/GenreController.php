@@ -1,76 +1,75 @@
 <?php
-
-// In app/Http/Controllers/BookController.php
 namespace App\Http\Controllers;
 
-use App\Models\Book;
-use App\Models\Author;
 use App\Models\Genre;
 use Illuminate\Http\Request;
 
-class BookController extends Controller
+class GenreController extends Controller
 {
+    /**
+     * Display a listing of the genres.
+     */
     public function index()
     {
-        $books = Book::all();
-        return view('books.index', compact('books'));
+        $genres = Genre::paginate(5); // Fetch 5 genres per page
+        return view('genres.index', compact('genres'));
     }
-
+    /**
+     * Show the form for creating a new genre.
+     */
     public function create()
     {
-        $authors = Author::all();
-        $genres = Genre::all();
-        return view('books.create', compact('authors', 'genres'));
+        return view('genres.create'); // Return the create view
     }
 
+    /**
+     * Store a newly created genre in storage.
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'author_id' => 'required|exists:authors,id',
-            'genres' => 'required|array',
+            'name' => 'required|string|max:255', // Validate the name field
         ]);
 
-        $book = Book::create($request->only('title', 'author_id'));
-        $book->genres()->attach($request->genres);
-
-        return redirect()->route('books.index');
+        Genre::create($request->all()); // Create a new genre
+        return redirect()->route('genres.index')->with('success', 'Genre created successfully.');
     }
 
-    public function show($id)
+    /**
+     * Display the specified genre.
+     */
+    public function show(Genre $genre)
     {
-        $book = Book::with('author', 'genres', 'reviews')->findOrFail($id);
-        return view('books.show', compact('book'));
+        return view('genres.show', compact('genre')); // Return the show view
     }
 
-    public function edit($id)
+    /**
+     * Show the form for editing the specified genre.
+     */
+    public function edit(Genre $genre)
     {
-        $book = Book::findOrFail($id);
-        $authors = Author::all();
-        $genres = Genre::all();
-        return view('books.edit', compact('book', 'authors', 'genres'));
+        return view('genres.edit', compact('genre')); // Return the edit view
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update the specified genre in storage.
+     */
+    public function update(Request $request, Genre $genre)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'author_id' => 'required|exists:authors,id',
-            'genres' => 'required|array',
+            'name' => 'required|string|max:255', // Validate the name field
         ]);
 
-        $book = Book::findOrFail($id);
-        $book->update($request->only('title', 'author_id'));
-        $book->genres()->sync($request->genres);
-
-        return redirect()->route('books.index');
+        $genre->update($request->all()); // Update the genre
+        return redirect()->route('genres.index')->with('success', 'Genre updated successfully.');
     }
 
-    public function destroy($id)
+    /**
+     * Remove the specified genre from storage.
+     */
+    public function destroy(Genre $genre)
     {
-        $book = Book::findOrFail($id);
-        $book->delete();
-
-        return redirect()->route('books.index');
+        $genre->delete(); // Delete the genre
+        return redirect()->route('genres.index')->with('success', 'Genre deleted successfully.');
     }
 }

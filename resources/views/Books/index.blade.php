@@ -19,4 +19,7 @@
             @endforeach
         </ul>
     </div>
+    <div class="mt-3">
+        {{ $books->links() }}
+    </div>
 @endsection

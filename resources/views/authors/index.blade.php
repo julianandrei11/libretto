@@ -14,4 +14,8 @@
             @endforeach
         </ul>
     </div>
+
+    <div class="mt-3">
+        {{ $authors->links() }}
+        </div>
 @endsection

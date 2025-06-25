@@ -12,15 +12,15 @@ class BookController extends Controller
     /**
      * Display a listing of the books.
      */
+  
     public function index()
     {
-        // Fetch all books with their associated authors and genres
-        $books = Book::with('author', 'genres')->get();
-
-        // Return the view with the books data
+        // Fetch paginated books with authors and genres
+        $books = Book::with('author', 'genres')->paginate(5); // change 5 to desired items per page
+    
         return view('books.index', compact('books'));
     }
-
+    
     /**
      * Show the form for creating a new book.
      */

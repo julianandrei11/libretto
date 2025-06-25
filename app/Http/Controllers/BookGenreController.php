@@ -1,76 +1,70 @@
 <?php
 
-// In app/Http/Controllers/BookController.php
 namespace App\Http\Controllers;
 
 use App\Models\Book;
-use App\Models\Author;
 use App\Models\Genre;
 use Illuminate\Http\Request;
 
-class BookController extends Controller
+class BookGenreController extends Controller
 {
     public function index()
     {
-        $books = Book::all();
+        $books = Book::with('genres')->get();
         return view('books.index', compact('books'));
     }
 
     public function create()
     {
-        $authors = Author::all();
         $genres = Genre::all();
-        return view('books.create', compact('authors', 'genres'));
+        return view('books.create', compact('genres'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'required|string',
             'author_id' => 'required|exists:authors,id',
-            'genres' => 'required|array',
+            'genre_ids' => 'array|exists:genres,id'
         ]);
 
         $book = Book::create($request->only('title', 'author_id'));
-        $book->genres()->attach($request->genres);
+        $book->genres()->attach($request->genre_ids);
 
-        return redirect()->route('books.index');
+        return redirect()->route('books.index')->with('success', 'Book created successfully.');
     }
 
-    public function show($id)
+    public function show(Book $book)
     {
-        $book = Book::with('author', 'genres', 'reviews')->findOrFail($id);
+        $book->load('genres');
         return view('books.show', compact('book'));
     }
 
-    public function edit($id)
+    public function edit(Book $book)
     {
-        $book = Book::findOrFail($id);
-        $authors = Author::all();
         $genres = Genre::all();
-        return view('books.edit', compact('book', 'authors', 'genres'));
+        $book->load('genres');
+        return view('books.edit', compact('book', 'genres'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Book $book)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'required|string',
             'author_id' => 'required|exists:authors,id',
-            'genres' => 'required|array',
+            'genre_ids' => 'array|exists:genres,id'
         ]);
 
-        $book = Book::findOrFail($id);
         $book->update($request->only('title', 'author_id'));
-        $book->genres()->sync($request->genres);
+        $book->genres()->sync($request->genre_ids);
 
-        return redirect()->route('books.index');
+        return redirect()->route('books.index')->with('success', 'Book updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(Book $book)
     {
-        $book = Book::findOrFail($id);
+        $book->genres()->detach();
         $book->delete();
-
-        return redirect()->route('books.index');
+        return redirect()->route('books.index')->with('success', 'Book deleted.');
     }
 }

@@ -1,23 +1,23 @@
 <?php
-
-namespace Database\Factories;
-
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Model>
- */
-class SeederFactory extends Factory
+// database/seeders/DatabaseSeeder.php
+namespace Database\Seeders;
+use Illuminate\Database\Seeder;
+use App\Models\Author;
+use App\Models\Book;
+use App\Models\Genre;
+use App\Models\Review;
+class DatabaseSeeder extends Seeder
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
-    public function definition(): array
-    {
-        return [
-            //
-        ];
-    }
+ public function run()
+ {
+ \App\Models\Author::factory(10)->create()->each(function ($author) {
+ $books = \App\Models\Book::factory(3)->create(['author_id' => 
+$author->id]);
+ $books->each(function ($book) {
+ $genres = \App\Models\Genre::factory(2)->create();
+ $book->genres()->attach($genres);
+ \App\Models\Review::factory(5)->create(['book_id' => $book->id]);
+ });
+ });
+ }
 }

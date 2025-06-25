@@ -13,7 +13,7 @@ class AuthorController extends Controller
     // Display a listing of authors
     public function index()
     {
-        $authors = Author::all();  // Get all authors
+        $authors = Author::latest()->paginate(5); // Get all authors
         return view('authors.index', compact('authors'));
     }
 
