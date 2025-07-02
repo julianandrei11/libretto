@@ -1,8 +1,5 @@
 <?php
 
-// In app/Http/Controllers/BookController.php
-// app/Http/Controllers/AuthorController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Author;
@@ -10,46 +7,66 @@ use Illuminate\Http\Request;
 
 class AuthorController extends Controller
 {
-    // Display a listing of authors
-    public function index()
+    public function index(Request $request)
     {
-        $authors = Author::latest()->paginate(5); // Get all authors
+        $authors = Author::latest()->paginate(5);
+
+        if ($request->is('api/*')) {
+            return response()->json($authors);
+        }
+
         return view('authors.index', compact('authors'));
     }
 
-    // Show the form for creating a new author
-    public function create()
+    public function create(Request $request)
     {
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Use POST /api/authors to create']);
+        }
+
         return view('authors.create');
     }
 
-    // Store a newly created author in storage
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
-        Author::create($request->all());  // Store the new author
+        $author = Author::create($request->all());
+
+        if ($request->is('api/*')) {
+            return response()->json([
+                'message' => 'Author created successfully',
+                'author' => $author
+            ], 201);
+        }
 
         return redirect()->route('authors.index');
     }
 
-    // Display the specified author
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $author = Author::findOrFail($id);  // Find the author
+        $author = Author::findOrFail($id);
+
+        if ($request->is('api/*')) {
+            return response()->json($author);
+        }
+
         return view('authors.show', compact('author'));
     }
 
-    // Show the form for editing the specified author
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
-        $author = Author::findOrFail($id);  // Find the author to edit
+        $author = Author::findOrFail($id);
+
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Use PUT /api/authors/{id} to update']);
+        }
+
         return view('authors.edit', compact('author'));
     }
 
-    // Update the specified author in storage
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -57,16 +74,28 @@ class AuthorController extends Controller
         ]);
 
         $author = Author::findOrFail($id);
-        $author->update($request->all());  // Update the author
+        $author->update($request->all());
+
+        if ($request->is('api/*')) {
+            return response()->json([
+                'message' => 'Author updated successfully',
+                'author' => $author
+            ]);
+        }
 
         return redirect()->route('authors.index');
     }
 
-    // Remove the specified author from storage
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $author = Author::findOrFail($id);
-        $author->delete();  // Delete the author
+        $author->delete();
+
+        if ($request->is('api/*')) {
+            return response()->json([
+                'message' => 'Author deleted successfully'
+            ]);
+        }
 
         return redirect()->route('authors.index');
     }

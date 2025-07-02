@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Genre;
@@ -6,70 +7,78 @@ use Illuminate\Http\Request;
 
 class GenreController extends Controller
 {
-    /**
-     * Display a listing of the genres.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $genres = Genre::paginate(5); // Fetch 5 genres per page
+        $genres = Genre::paginate(5);
+
+        if ($request->is('api/*')) {
+            return response()->json($genres);
+        }
+
         return view('genres.index', compact('genres'));
     }
-    /**
-     * Show the form for creating a new genre.
-     */
-    public function create()
+
+    public function create(Request $request)
     {
-        return view('genres.create'); // Return the create view
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Use POST /api/genres to create']);
+        }
+
+        return view('genres.create');
     }
 
-    /**
-     * Store a newly created genre in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255', // Validate the name field
-        ]);
+        $request->validate(['name' => 'required|string|max:255']);
 
-        Genre::create($request->all()); // Create a new genre
+        $genre = Genre::create($request->all());
+
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Genre created', 'genre' => $genre], 201);
+        }
+
         return redirect()->route('genres.index')->with('success', 'Genre created successfully.');
     }
 
-    /**
-     * Display the specified genre.
-     */
-    public function show(Genre $genre)
+    public function show(Request $request, Genre $genre)
     {
-        return view('genres.show', compact('genre')); // Return the show view
+        if ($request->is('api/*')) {
+            return response()->json($genre);
+        }
+
+        return view('genres.show', compact('genre'));
     }
 
-    /**
-     * Show the form for editing the specified genre.
-     */
-    public function edit(Genre $genre)
+    public function edit(Request $request, Genre $genre)
     {
-        return view('genres.edit', compact('genre')); // Return the edit view
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Use PUT /api/genres/{id} to update']);
+        }
+
+        return view('genres.edit', compact('genre'));
     }
 
-    /**
-     * Update the specified genre in storage.
-     */
     public function update(Request $request, Genre $genre)
     {
-        $request->validate([
-            'name' => 'required|string|max:255', // Validate the name field
-        ]);
+        $request->validate(['name' => 'required|string|max:255']);
 
-        $genre->update($request->all()); // Update the genre
+        $genre->update($request->all());
+
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Genre updated', 'genre' => $genre]);
+        }
+
         return redirect()->route('genres.index')->with('success', 'Genre updated successfully.');
     }
 
-    /**
-     * Remove the specified genre from storage.
-     */
-    public function destroy(Genre $genre)
+    public function destroy(Request $request, Genre $genre)
     {
-        $genre->delete(); // Delete the genre
+        $genre->delete();
+
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Genre deleted']);
+        }
+
         return redirect()->route('genres.index')->with('success', 'Genre deleted successfully.');
     }
 }

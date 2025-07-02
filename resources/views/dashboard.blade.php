@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container">
-    <h1>Welcome to the Dashboard</h1>
+    <h1>Welcome to the Libretto</h1>
     <ul class="list-group">
         <li class="list-group-item">
             <a href="{{ route('authors.index') }}">Authors</a>
