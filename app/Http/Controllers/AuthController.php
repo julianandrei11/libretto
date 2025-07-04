@@ -14,33 +14,34 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required']
         ]);
-
+    
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
-
+    
         $user = Auth::user();
-
-        // Check for existing token
-        $token = $user->tokens()->latest()->first();
-
-        if ($token && Carbon::parse($token->created_at)->addDay()->isFuture()) {
+    
+        // Optional: reuse existing token if not expired (up to you)
+        $existingToken = $user->tokens()->latest()->first();
+    
+        if ($existingToken && Carbon::parse($existingToken->created_at)->addDay()->isFuture()) {
             return response()->json([
-                'token' => $token->token,
-                'message' => 'Existing token still valid'
+                'token' => $existingToken->token,
+                'message' => 'Login successful. Existing token still valid.',
+                'user' => $user
             ]);
         }
-
-        // Delete old tokens and generate new one
+    
+        // Delete old tokens
         $user->tokens()->delete();
-
-        $newToken = $user->createToken('libretto_token');
-
+    
         return response()->json([
-            'token' => $newToken->plainTextToken,
-            'message' => 'New token generated'
+            'token' => $newToken,
+            'message' => 'Login successful. New token generated.',
+            'user' => $user
         ]);
     }
+    
 
     public function logout(Request $request)
     {
