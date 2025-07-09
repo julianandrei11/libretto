@@ -9,21 +9,35 @@ use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
+    /**
+     * Show the registration form (for web users).
+     */
+    public function showRegistrationForm()
+    {
+        return view('login.register.register'); // adjust path if needed
+    }
+
+    /**
+     * Handle user registration.
+     */
     public function register(Request $request)
     {
-        // Validate request
+        // Validate input
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:3',
         ]);
 
+        // If validation fails
         if ($validator->fails()) {
             if ($request->wantsJson()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
-            return redirect()->back()->withErrors($validator)->withInput();
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Create user
@@ -33,25 +47,30 @@ class RegisterController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Delete any existing tokens
+        // Delete existing tokens for user
         $user->tokens()->delete();
 
-        // Create new token
-        $token = $user->createToken('libretto_token')->plainTextToken;
+        // Set expiration time (e.g., 1 day from now)
+        $expiration = now()->addDay();
 
+        // Create new token and save expiration
+        $token = $user->createToken('libretto_token');
+        $plainTextToken = $token->plainTextToken;
+        $token->accessToken->expires_at = $expiration;
+        $token->accessToken->save();
+
+        // Return JSON response
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'User registered successfully',
-                'token' => $token,
-                'user' => $user
+                'token' => $plainTextToken,
+                'token_type' => 'Bearer',
+                'expires_at' => $expiration->toDateTimeString(),
+                'user' => $user,
             ], 201);
         }
 
+        // Otherwise, redirect to login page
         return redirect('/login')->with('success', 'Registration successful! You may now log in.');
-    }
-
-    public function showRegistrationForm()
-    {
-        return view('login.register.register'); // Adjust path if necessary
     }
 }
