@@ -9,27 +9,20 @@ use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
-    /**
-     * Show the registration form (for web users).
-     */
     public function showRegistrationForm()
     {
-        return view('login.register.register'); // adjust path if needed
+        return view('login.register.register');
     }
 
-    /**
-     * Handle user registration.
-     */
     public function register(Request $request)
     {
-        // Validate input
+        // Validate input including confirm password
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:3',
+            'password' => 'required|string|min:3|confirmed',
         ]);
 
-        // If validation fails
         if ($validator->fails()) {
             if ($request->wantsJson()) {
                 return response()->json(['errors' => $validator->errors()], 422);
@@ -47,30 +40,15 @@ class RegisterController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Delete existing tokens for user
-        $user->tokens()->delete();
+        // ❌ Do not generate token here
 
-        // Set expiration time (e.g., 1 day from now)
-        $expiration = now()->addDay();
-
-        // Create new token and save expiration
-        $token = $user->createToken('libretto_token');
-        $plainTextToken = $token->plainTextToken;
-        $token->accessToken->expires_at = $expiration;
-        $token->accessToken->save();
-
-        // Return JSON response
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'User registered successfully',
-                'token' => $plainTextToken,
-                'token_type' => 'Bearer',
-                'expires_at' => $expiration->toDateTimeString(),
+                'message' => 'User registered successfully. Please log in.',
                 'user' => $user,
             ], 201);
         }
 
-        // Otherwise, redirect to login page
         return redirect('/login')->with('success', 'Registration successful! You may now log in.');
     }
 }
